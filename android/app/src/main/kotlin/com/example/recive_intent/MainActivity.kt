@@ -126,13 +126,10 @@ class MainActivity : FlutterActivity() {
                 response["response"] = jsonData
 
                 // Send the response back to Flutter
-                flutterEngine?.dartExecutor?.binaryMessenger?.let {
-                    MethodChannel(it, CHANNEL_RESULT)
-                        .invokeMethod("onActivityResult", response)
-                }
+                MethodChannel(flutterEngine?.dartExecutor?.binaryMessenger!!, CHANNEL_RESULT)
+                    .invokeMethod("onActivityResult", response)
             }
-        }
-     else {
+        } else {
             Log.d("DEBUG", "Intent execution failed")
         }
     }

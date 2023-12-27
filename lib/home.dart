@@ -9,6 +9,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 static const platform = MethodChannel('com.example/callme');
+ static const platformResult = MethodChannel('com.example.callme.result');
 String responseData = '';
 // Define your method to invoke the Kotlin side
 void invokeKotlinMethod()async {
@@ -31,7 +32,7 @@ void invokeKotlinMethod()async {
     print('Error: $e');
   }
 }
- Future<void> _receiveResponse() async {
+Future<void> _receiveResponse() async {
     try {
       final Map<dynamic, dynamic> response =
           await platform.invokeMethod('getResponse');
@@ -44,6 +45,19 @@ void invokeKotlinMethod()async {
       });
     }
   }
+  @override
+  void initState() {
+    super.initState();
+    platformResult.setMethodCallHandler((call) async {
+      if (call.method == 'onActivityResult') {
+        final String response = call.arguments['response'];
+        setState(() {
+          responseData = response;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
