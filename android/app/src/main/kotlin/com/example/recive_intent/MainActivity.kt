@@ -1,35 +1,28 @@
-package com.example.recive_intent
+package com.example.receive_intent
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+
 class Consts {
     companion object {
         /**
-         * payment application package name
+         * Payment application package name
          */
         const val PACKAGE = "com.intersoft.acquire.mada"
 
         /**
-         * service  action
+         * Service action
          */
         const val SERVICE_ACTION = "android.intent.action.intersoft.PAYMENT.SERVICE"
 
-        /** bank aquire ，action */
+        /** Bank acquire action */
         const val CARD_ACTION = "android.intent.action.intersoft.PAYMENT"
 
-
-        /** union pay scan ，action */
-        const val UNIONPAY_ACTION = "android.intent.action.intersoft.PAYMENT_UNION_SCAN"
-
-        /**
-         * installment
-         */
-        const val INSTALLMENT_ACTION = "android.intent.action.intersoft.PAYMENT_INSTALLMENT"
+        // ... (other constants)
     }
 }
 
@@ -76,45 +69,61 @@ class ThirdTag {
     }
 
 }
+
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example/callme"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-
         super.configureFlutterEngine(flutterEngine)
-            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-                if (call.method == "callme") {
-                    val arg = call.arguments as? Map<String, Any>
-                    val outOrderNo = arg?.get("outOrderNo") as? String
-                    val amount = arg?.get("amount") as? String
-                    val isJSONOption = arg?.get("isJSONOption") as? Boolean ?: false // Assuming isJSONOption is passed from Flutter
 
-                    if (outOrderNo != null && amount != null) {
-                        val intent = Intent()
-                        intent.setPackage(Consts.PACKAGE)
-                        intent.setAction(Consts.CARD_ACTION)
-                        intent.putExtra(ThirdTag.CHANNEL_ID, "acquire")
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+            if (call.method == "callme") {
+                val arg = call.arguments as? Map<String, Any>
+                val outOrderNo = arg?.get("outOrderNo") as? String
+                val amount = arg?.get("amount") as? String
+                val isJSONOption = arg?.get("isJSONOption") as? Boolean ?: false
 
-                        if (isJSONOption) {
-                            intent.putExtra(ThirdTag.TRANS_TYPE, ThirdTag.Sale_TRANSACTION_JOSON)
-                        } else {
-                            intent.putExtra(ThirdTag.TRANS_TYPE, ThirdTag.Sale_TRANSACTION)
-                        }
+                if (outOrderNo != null && amount != null) {
+                    val intent = Intent()
+                    intent.setPackage(Consts.PACKAGE)
+                    intent.setAction(Consts.CARD_ACTION)
+                    intent.putExtra(ThirdTag.CHANNEL_ID, "acquire")
 
-                        intent.putExtra(ThirdTag.OUT_ORDERNO, outOrderNo)
-                        intent.putExtra(ThirdTag.AMOUNT, amount.toLong())
-
-                        startActivityForResult(intent, 12)
-                        result.success("Message received by Kotlin")
+                    if (isJSONOption) {
+                        intent.putExtra(ThirdTag.TRANS_TYPE, ThirdTag.Sale_TRANSACTION_JOSON)
                     } else {
-                        result.error("ARGUMENT_ERROR", "Argument type mismatch or missing data", null)
+                        intent.putExtra(ThirdTag.TRANS_TYPE, ThirdTag.Sale_TRANSACTION)
                     }
+
+                    intent.putExtra(ThirdTag.OUT_ORDERNO, outOrderNo)
+                    intent.putExtra(ThirdTag.AMOUNT, amount.toLong())
+
+                    startActivityForResult(intent, 12)
+                    result.success("Message received by Kotlin")
                 } else {
-                    result.notImplemented()
+                    result.error("ARGUMENT_ERROR", "Argument type mismatch or missing data", null)
                 }
+            } else {
+                result.notImplemented()
             }
+        }
+    }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
+        if (requestCode == 12) {
+            if (resultCode == RESULT_OK) {
+                val jsonData = data?.getStringExtra(ThirdTag.JSON_DATA)
+                if (jsonData != null) {
+                    Log.d("DEBUG", jsonData)
+                    // Here, handle the received JSON data as needed
+                    // For example, update UI elements with the received data
+                }
+            } else {
+                Log.e("ERROR", "Activity result not OK")
+                // Handle the case where the result was not OK
+            }
+        }
     }
 }
-
