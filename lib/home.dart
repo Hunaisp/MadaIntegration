@@ -9,7 +9,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 static const platform = MethodChannel('com.example/callme');
-
+String responseData = '';
 // Define your method to invoke the Kotlin side
 void invokeKotlinMethod()async {
   String outOrderNo = '10';
@@ -31,21 +31,45 @@ void invokeKotlinMethod()async {
     print('Error: $e');
   }
 }
-
+ Future<void> _receiveResponse() async {
+    try {
+      final Map<dynamic, dynamic> response =
+          await platform.invokeMethod('getResponse');
+      setState(() {
+        responseData = response['response'];
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        responseData = 'Failed to get response: ${e.message}';
+      });
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text('Invoke Kotlin from Flutter'),
         ),
-        body: Center(
-          child: ElevatedButton(
+        body: Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+          ElevatedButton(
             onPressed: () {
               invokeKotlinMethod();
             },
             child: Text('Call Kotlin method'),
           ),
-        ),
+
+  ElevatedButton(
+            onPressed: () {
+             _receiveResponse();
+            },
+            child: Text('Get Response'),
+          ),
+
+
+           Text('Response Data:'),
+              Text(responseData),
+        ],)
+        
       
     );
   }

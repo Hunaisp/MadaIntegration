@@ -78,7 +78,7 @@ class ThirdTag {
 }
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example/callme"
-
+    private val CHANNEL_RESULT = "com.example.callme.result"
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
@@ -122,11 +122,17 @@ class MainActivity : FlutterActivity() {
         if (resultCode == RESULT_OK && requestCode == 123) {
             val jsonData = data?.getStringExtra(ThirdTag.JSON_DATA)
             if (jsonData != null) {
-                Log.d("DEBUG", jsonData)
-            } else {
-                Log.d("DEBUG", "JSON_DATA not found")
+                val response: MutableMap<String, Any> = HashMap()
+                response["response"] = jsonData
+
+                // Send the response back to Flutter
+                flutterEngine?.dartExecutor?.binaryMessenger?.let {
+                    MethodChannel(it, CHANNEL_RESULT)
+                        .invokeMethod("onActivityResult", response)
+                }
             }
-        } else {
+        }
+     else {
             Log.d("DEBUG", "Intent execution failed")
         }
     }
